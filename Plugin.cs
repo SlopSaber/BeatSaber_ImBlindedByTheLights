@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BeatSaberMarkupLanguage.Util;
+using HarmonyLib;
 using ImBlindedByTheLights.HarmonyPatches;
 using ImBlindedByTheLights.UI;
 using IPA;
@@ -38,7 +39,9 @@ namespace ImBlindedByTheLights {
 
 			SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
 
-			BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.instance.AddTab("BlindedByTheLights", "ImBlindedByTheLights.UI.GamePlaySetupTab.bsml", new MAN());
+			MainMenuAwaiter.MainMenuInitializing += delegate {
+				BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.Instance.AddTab("BlindedByTheLights", "ImBlindedByTheLights.UI.GamePlaySetupTab.bsml", new MAN());
+			};
 		}
 
 		private void SceneManager_activeSceneChanged(Scene arg0, Scene arg1) {

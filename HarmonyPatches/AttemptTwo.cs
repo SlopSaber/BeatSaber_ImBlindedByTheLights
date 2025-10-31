@@ -231,7 +231,9 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 
 			//System.Console.WriteLine("OnPreCull {0} {1} {2}", cam.transform?.parent?.name, cam.stereoTargetEye, cam.stereoActiveEye);
 
-			if((cam.stereoActiveEye != Camera.MonoOrStereoscopicEye.Mono && Config.Instance.staticInHeadset) || (cam.stereoActiveEye == Camera.MonoOrStereoscopicEye.Mono && Config.Instance.staticOnDesktop))
+			var isRenderingVR = cam.stereoActiveEye != Camera.MonoOrStereoscopicEye.Mono;
+
+			if((isRenderingVR && Config.Instance.staticInHeadset) || (!isRenderingVR && Config.Instance.staticOnDesktop))
 				LightSwitch.DisableLights();
 		}
 

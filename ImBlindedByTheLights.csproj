@@ -54,8 +54,14 @@
     <Reference Include="BeatmapCore">
       <HintPath>E:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\BeatmapCore.dll</HintPath>
     </Reference>
+    <Reference Include="BeatSaber.ViewSystem">
+      <HintPath>E:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\BeatSaber.ViewSystem.dll</HintPath>
+    </Reference>
     <Reference Include="BSML">
       <HintPath>E:\SteamLibrary\steamapps\common\Beat Saber\Plugins\BSML.dll</HintPath>
+    </Reference>
+    <Reference Include="DataModels">
+      <HintPath>E:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\DataModels.dll</HintPath>
     </Reference>
     <Reference Include="HMRendering">
       <HintPath>E:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\HMRendering.dll</HintPath>
