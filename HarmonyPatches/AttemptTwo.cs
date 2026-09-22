@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,7 +76,7 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 			 * act as tho we are on static lights!
 			 */
 			yield return null;
-			var bcu = Object.FindObjectOfType<BeatmapCallbacksUpdater>();
+			var bcu = Object.FindFirstObjectByType<BeatmapCallbacksUpdater>();
 			if(bcu == null)
 				yield break;
 
@@ -104,13 +104,13 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 
 			// Now that this propagated to all the environment stuff, look for all the lights which are on
 
-			var lights = Object.FindObjectsOfType<TubeBloomPrePassLight>().Select(x => (ILightAdapter)new UnifiedTubeBloomPrePassLight(x))
-				.Concat(Object.FindObjectsOfType<LightmapLightsWithIds>().Select(x => new UnifiedLightmapLightsWithIds(x)))
-				.Concat(Object.FindObjectsOfType<MaterialLightWithId>().Select(x => new UnifiedMaterialLightWithId(x)))
-				.Concat(Object.FindObjectsOfType<DirectionalLight>().Select(x => new UnifiedDirectionalLight(x)))
-				.Concat(Object.FindObjectsOfType<BloomPrePassBackgroundColorsGradient>().Select(x => new UnifiedBloomPrePassBackgroundColorsGradient(x)))
-				.Concat(Object.FindObjectsOfType<SpriteLightWithId>().Select(x => new UnifiedSpriteLightWithId(x)))
-				.Concat(Object.FindObjectsOfType<MaterialPropertyBlockColorSetter>().Select(x => new UnifiedMaterialPropertyBlockColorSetter(x)))
+			var lights = Object.FindObjectsByType<TubeBloomPrePassLight>(FindObjectsSortMode.InstanceID).Select(x => (ILightAdapter)new UnifiedTubeBloomPrePassLight(x))
+				.Concat(Object.FindObjectsByType<LightmapLightsWithIds>(FindObjectsSortMode.InstanceID).Select(x => new UnifiedLightmapLightsWithIds(x)))
+				.Concat(Object.FindObjectsByType<MaterialLightWithId>(FindObjectsSortMode.InstanceID).Select(x => new UnifiedMaterialLightWithId(x)))
+				.Concat(Object.FindObjectsByType<DirectionalLight>(FindObjectsSortMode.InstanceID).Select(x => new UnifiedDirectionalLight(x)))
+				.Concat(Object.FindObjectsByType<BloomPrePassBackgroundColorsGradient>(FindObjectsSortMode.InstanceID).Select(x => new UnifiedBloomPrePassBackgroundColorsGradient(x)))
+				.Concat(Object.FindObjectsByType<SpriteLightWithId>(FindObjectsSortMode.InstanceID).Select(x => new UnifiedSpriteLightWithId(x)))
+				.Concat(Object.FindObjectsByType<MaterialPropertyBlockColorSetter>(FindObjectsSortMode.InstanceID).Select(x => new UnifiedMaterialPropertyBlockColorSetter(x)))
 
 				//.Concat(Resources.FindObjectsOfTypeAll<MeshRenderer>().Where(x => x.material.HasProperty("_Color")).Select(x => new UnifiedMaterialColor(x)))
 				.ToArray();
@@ -123,7 +123,7 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 
 
 			yeetedLights = lights.Where(x => !x.CheckShouldBeActiveWhenStatic())
-				.Concat(Object.FindObjectsOfType<ParticleSystemEventEffect>().Select(x => new UnifiedDynamicGameObject(x.gameObject)))
+				.Concat(Object.FindObjectsByType<ParticleSystemEventEffect>(FindObjectsSortMode.InstanceID).Select(x => new UnifiedDynamicGameObject(x.gameObject)))
 				.ToArray();
 
 #if DEBUG
@@ -133,8 +133,8 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 			if(Config.Instance.keepRingSpinsInStatic)
 				yield break;
 
-			var _fixedPositionThings = Object.FindObjectsOfType<TrackLaneRing>().Select(x => x.transform)
-				.Concat(Object.FindObjectsOfType<LightPairRotationEventEffect>().SelectMany(x => x.transform.Cast<Transform>()))
+			var _fixedPositionThings = Object.FindObjectsByType<TrackLaneRing>(FindObjectsSortMode.InstanceID).Select(x => x.transform)
+				.Concat(Object.FindObjectsByType<LightPairRotationEventEffect>(FindObjectsSortMode.InstanceID).SelectMany(x => x.transform.Cast<Transform>()))
 				.Where(x => x.gameObject.activeInHierarchy).Distinct().ToArray();
 
 			staticRotationBackup = new Quaternion[_fixedPositionThings.Count()];
