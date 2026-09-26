@@ -10,10 +10,10 @@ namespace ImBlindedByTheLights.LightAdapters {
 		LightmapLightsWithIds t;
 
 		// Why is this private? Whats the getter for?!
-		FieldAccessor<LightmapLightsWithIds, LightmapLightsWithIds.LightIntensitiesWithId[]>.Accessor FIELD_lightIntensityData =
+		static readonly FieldAccessor<LightmapLightsWithIds, LightmapLightsWithIds.LightIntensitiesWithId[]>.Accessor FIELD_lightIntensityData =
 			FieldAccessor<LightmapLightsWithIds, LightmapLightsWithIds.LightIntensitiesWithId[]>.GetAccessor("_lightIntensityData");
 
-		Action<LightmapLightsWithIds> METHOD_HandleLightManagerDidChangeSomeColorsThisFrame = 
+		static readonly Action<LightmapLightsWithIds> METHOD_HandleLightManagerDidChangeSomeColorsThisFrame = 
 			MethodAccessor<LightWithIds, Action<LightWithIds>>.GetDelegate("HandleLightManagerDidChangeSomeColorsThisFrame");
 
 		LightmapLightsWithIds.LightIntensitiesWithId[] _lightIntensityData;

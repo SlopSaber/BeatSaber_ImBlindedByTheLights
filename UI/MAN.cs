@@ -12,22 +12,28 @@ namespace ImBlindedByTheLights.UI {
 		private readonly string version = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)} by Kinsi55\nCommissioned by NoneTaken";
 
 		[UIComponent("sponsorsText")] CurvedTextMeshPro sponsorsText = null;
+		Task sponsorsTask;
 		void OpenSponsorsLink() => Process.Start("https://github.com/sponsors/kinsi55");
 		void OpenSponsorsModal() {
+			if(sponsorsTask != null && !sponsorsTask.IsCompleted)
+				return;
 			sponsorsText.text = "Loading...";
-			Task.Run(() => {
+			sponsorsTask = Task.Run(() => {
 				string desc = "Failed to load";
 				try {
-					desc = (new WebClient()).DownloadString("http://kinsi.me/sponsors/bsout.php");
+					using var client = new WebClient();
+					desc = client.DownloadString("http://kinsi.me/sponsors/bsout.php");
 				} catch { }
 
 				_ = IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() => {
+					if(sponsorsText == null)
+						return;
 					sponsorsText.text = desc;
 					// There is almost certainly a better way to update / correctly set the scrollbar size...
 					sponsorsText.gameObject.SetActive(false);
 					sponsorsText.gameObject.SetActive(true);
 				});
-			}).ConfigureAwait(false);
+			});
 		}
 	}
 }
