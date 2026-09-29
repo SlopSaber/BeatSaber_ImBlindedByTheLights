@@ -7,7 +7,7 @@ namespace ImBlindedByTheLights {
 	internal class Config {
 		public static Config Instance { get; set; }
 
-		public virtual bool enablePlugin { get; set; } = true;
+		public virtual bool enablePlugin { get; set; } = false;
 
 		public virtual Color staticColor { get; set; } = Color.gray;
 
