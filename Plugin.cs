@@ -8,6 +8,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using IPALogger = IPA.Logging.Logger;
+using GameplaySetup = BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup;
 
 
 // BeatmapDataLoader::GetBeatmapDataFromBeatmapSaveData
@@ -27,6 +28,8 @@ namespace ImBlindedByTheLights {
 		internal static Harmony harmony { get; private set; }
 		private Coroutine _lightInitialization;
 		private MonoBehaviour _lightInitializationHost;
+		private MAN _menuHost;
+		private GameplaySetup _menuRegistrationOwner;
 
 		[Init]
 		public void Init(IPALogger logger, IPA.Config.Config conf) {
@@ -42,12 +45,28 @@ namespace ImBlindedByTheLights {
 
 			SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
 
-			MainMenuAwaiter.MainMenuInitializing += delegate {
-				BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.Instance.AddTab("BlindedByTheLights", "ImBlindedByTheLights.UI.GamePlaySetupTab.bsml", new MAN());
-			};
+			MainMenuAwaiter.MainMenuInitializing += InitializeMenu;
+		}
+
+		private void InitializeMenu() {
+			RetireMenu();
+			_menuRegistrationOwner = GameplaySetup.Instance;
+			_menuHost = new MAN();
+			_menuRegistrationOwner.AddTab("BlindedByTheLights", "ImBlindedByTheLights.UI.GamePlaySetupTab.bsml", _menuHost);
+		}
+
+		private void RetireMenu() {
+			if(_menuHost == null)
+				return;
+			_menuHost.Retire();
+			_menuHost = null;
+			GameplaySetup registrationOwner = _menuRegistrationOwner;
+			_menuRegistrationOwner = null;
+			registrationOwner?.RemoveTab("BlindedByTheLights");
 		}
 
 		private void SceneManager_activeSceneChanged(Scene arg0, Scene arg1) {
+			_menuHost?.RetireSponsorsPresentation();
 			StopLightInitialization();
 			LightSwitch.Clear();
 			if(Config.Instance.enablePlugin && arg1.name == "GameCore" && (Config.Instance.staticInHeadset || Config.Instance.staticOnDesktop)) {
@@ -67,10 +86,15 @@ namespace ImBlindedByTheLights {
 
 		[OnExit]
 		public void OnApplicationQuit() {
-			SceneManager.activeSceneChanged -= SceneManager_activeSceneChanged;
-			StopLightInitialization();
-			LightSwitch.Clear();
-			harmony.UnpatchSelf();
+			MainMenuAwaiter.MainMenuInitializing -= InitializeMenu;
+			try {
+				RetireMenu();
+			} finally {
+				SceneManager.activeSceneChanged -= SceneManager_activeSceneChanged;
+				StopLightInitialization();
+				LightSwitch.Clear();
+				harmony.UnpatchSelf();
+			}
 		}
 	}
 }
