@@ -5,6 +5,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
+using UnityEngine;
 using System.Threading.Tasks;
 
 namespace ImBlindedByTheLights.UI {
@@ -19,7 +20,9 @@ namespace ImBlindedByTheLights.UI {
 		Task<string> sponsorsDownload;
 		TaskCompletionSource<bool> sponsorsCompletion;
 		ViewController ownerView;
+		Transform originalParent;
 		ViewController presentationView;
+		Transform presentationParent;
 		ModalView presentationModal;
 		CurvedTextMeshPro presentationText;
 		bool modalOpen;
@@ -31,6 +34,7 @@ namespace ImBlindedByTheLights.UI {
 				ownerView.didDeactivateEvent -= OwnerDeactivated;
 			RetireSponsorsPresentation();
 			ownerView = sponsorModal != null ? sponsorModal.GetComponentInParent<ViewController>(true) : null;
+			originalParent = sponsorModal != null ? sponsorModal.transform.parent : null;
 			if(ownerView != null && !retired)
 				ownerView.didDeactivateEvent += OwnerDeactivated;
 		}
@@ -46,6 +50,7 @@ namespace ImBlindedByTheLights.UI {
 		internal void RetireSponsorsPresentation() {
 			modalOpen = false;
 			presentationView = null;
+			presentationParent = null;
 			presentationModal = null;
 			presentationText = null;
 		}
@@ -56,6 +61,7 @@ namespace ImBlindedByTheLights.UI {
 			if(ownerView != null)
 				ownerView.didDeactivateEvent -= OwnerDeactivated;
 			ownerView = null;
+			originalParent = null;
 			sponsorsCompletion?.TrySetCanceled();
 		}
 
@@ -64,6 +70,7 @@ namespace ImBlindedByTheLights.UI {
 			if(retired)
 				return;
 			presentationView = ownerView;
+			presentationParent = originalParent;
 			presentationModal = sponsorModal;
 			presentationText = sponsorsText;
 			if(sponsorsTask != null && !sponsorsTask.IsCompleted)
@@ -93,6 +100,7 @@ namespace ImBlindedByTheLights.UI {
 				string desc = download.GetAwaiter().GetResult();
 				if(!retired && modalOpen && presentationView != null && presentationView == ownerView
 					&& presentationView.isActivated && presentationView.gameObject.activeInHierarchy
+					&& presentationParent != null && presentationParent == originalParent && presentationParent.gameObject.activeInHierarchy
 					&& presentationModal != null && presentationModal == sponsorModal && presentationModal.isShown
 					&& presentationText != null && presentationText == sponsorsText && presentationText.gameObject.activeInHierarchy) {
 					presentationText.text = desc;
