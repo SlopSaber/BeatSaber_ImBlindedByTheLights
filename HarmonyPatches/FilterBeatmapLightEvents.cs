@@ -6,41 +6,44 @@ using System.Collections.Generic;
 namespace ImBlindedByTheLights.HarmonyPatches {
 	[HarmonyPatch(typeof(BeatmapDataTransformHelper), nameof(BeatmapDataTransformHelper.CreateTransformedBeatmapData))]
 	static class FilterBeatmapLightEvents {
-		public static bool endedUpWithAnyLights { get; private set; } = false;
+		static void Prefix(IReadonlyBeatmapData beatmapData, BeatmapKey beatmapKey, PlayerSpecificSettings playerSpecificSettings, out FilterSnapshot __state) {
+			__state = FilterSnapshot.Current.Value;
+			if (__state == null || !__state.TryClaim(beatmapData, beatmapKey, playerSpecificSettings))
+				__state = FilterSnapshot.Capture(beatmapData, beatmapKey, playerSpecificSettings);
+			__state.ThrowIfFailed();
+		}
 
-		static void Postfix(ref IReadonlyBeatmapData __result) {
-			if(!Config.Instance.enablePlugin)
+		static void Postfix(ref IReadonlyBeatmapData __result, FilterSnapshot __state) {
+			if(!__state.Enabled)
 				return;
 
-			if(Config.Instance.disableBackLasers || Config.Instance.disableCenterLights || Config.Instance.disableRingLights || Config.Instance.disableRotatingLasers) {
+			if(__state.DisableBackLasers || __state.DisableCenterLights || __state.DisableRingLights || __state.DisableRotatingLasers) {
 				__result = __result.GetFilteredCopy(x => {
 					if(!(x is BasicBeatmapEventData bbed))
 						return x;
 
 					switch(bbed.basicBeatmapEventType) {
 						case BasicBeatmapEventType.Event0:
-							if(Config.Instance.disableBackLasers) return null;
+							if(__state.DisableBackLasers) return null;
 							break;
 						case BasicBeatmapEventType.Event1:
-							if(Config.Instance.disableBackLasers) return null;
+							if(__state.DisableBackLasers) return null;
 							break;
 						case BasicBeatmapEventType.Event2:
 						case BasicBeatmapEventType.Event3:
 						case BasicBeatmapEventType.Event12:
 						case BasicBeatmapEventType.Event13:
-							if(Config.Instance.disableRotatingLasers) return null;
+							if(__state.DisableRotatingLasers) return null;
 							break;
 						case BasicBeatmapEventType.Event4:
-							if(Config.Instance.disableCenterLights) return null;
+							if(__state.DisableCenterLights) return null;
 							break;
 					}
 					return x;
 				});
 			}
 
-			endedUpWithAnyLights = false;
-
-			if(Config.Instance.staticWhenNoLights) {
+			if(__state.StaticWhenNoLights) {
 				foreach(var x in __result.allBeatmapDataItems) {
 					if(!(x is BasicBeatmapEventData bbed))
 						continue;
@@ -48,11 +51,17 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 					var lType = (int)bbed.basicBeatmapEventType;
 
 					if(lType >= 0 && lType < 8 && (bbed.value > 0 || bbed.floatValue > 0)) {
-						endedUpWithAnyLights = true;
+						__state.HasLights = true;
 						break;
 					}
 				}
 			}
+		}
+
+		static Exception Finalizer(Exception __exception, IReadonlyBeatmapData __result, FilterSnapshot __state) {
+			if (__exception == null && __result != null && __state != null)
+				FilterSnapshot.Publish(__result, __state);
+			return __exception;
 		}
 	}
 }

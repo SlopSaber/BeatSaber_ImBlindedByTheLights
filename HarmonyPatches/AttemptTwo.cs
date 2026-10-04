@@ -20,8 +20,9 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 			yield return AccessTools.Method(typeof(LightSwitchEventEffect), nameof(LightSwitchEventEffect.GetHighlightColor));
 		}
 
-		static void Postfix(ref Color __result) {
-			if(BasegameStaticLights.enabled || (!FilterBeatmapLightEvents.endedUpWithAnyLights && Config.Instance.staticWhenNoLights)) {
+		static void Postfix(ref Color __result, BeatmapCallbacksController ____beatmapCallbacksController) {
+			var flags = FilterSnapshot.ForController(____beatmapCallbacksController);
+			if(flags.StaticEnabled || (!flags.HasLights && Config.Instance.staticWhenNoLights)) {
 				if(Config.Instance.enablePlugin)
 					__result = Config.Instance.staticColor;
 				return;
@@ -89,10 +90,12 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 			if(controller == null)
 				yield break;
 
+			var flags = FilterSnapshot.ForController(controller);
+
 			ForceColorOnInit.enable = true;
 			yield return null;
 
-			if(BasegameStaticLights.enabled) {
+			if(flags.StaticEnabled) {
 				ForceColorOnInit.enable = false;
 				yield break;
 			}
@@ -103,7 +106,7 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 
 			ForceColorOnInit.enable = false;
 
-			if(Config.Instance.staticWhenNoLights && !FilterBeatmapLightEvents.endedUpWithAnyLights)
+			if(Config.Instance.staticWhenNoLights && !flags.HasLights)
 				yield break;
 
 			// Now that this propagated to all the environment stuff, look for all the lights which are on

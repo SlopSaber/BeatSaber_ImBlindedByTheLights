@@ -8,18 +8,15 @@ using HarmonyLib;
 using static PlayerSaveData;
 
 namespace ImBlindedByTheLights.HarmonyPatches {
-	[HarmonyPatch(typeof(BeatmapDataTransformHelper), nameof(BeatmapDataTransformHelper.CreateTransformedBeatmapData))]
 	static class BasegameStaticLights {
 		private static readonly System.Reflection.FieldInfo DefaultPresetField =
 			AccessTools.Field(typeof(PlayerSpecificSettings), "_environmentEffectsFilterDefaultPreset");
 		private static readonly System.Reflection.FieldInfo ExpertPlusPresetField =
 			AccessTools.Field(typeof(PlayerSpecificSettings), "_environmentEffectsFilterExpertPlusPreset");
 
-		public static bool enabled { get; private set; } = false;
-		static void Prefix(BeatmapKey beatmapKey, PlayerSpecificSettings playerSpecificSettings) {
+		internal static bool Capture(BeatmapKey beatmapKey, PlayerSpecificSettings playerSpecificSettings, bool forceStatic) {
 			if (playerSpecificSettings == null) {
-				enabled = false;
-				return;
+				return false;
 			}
 
 			var presetField = beatmapKey.difficulty == BeatmapDifficulty.ExpertPlus
@@ -29,13 +26,13 @@ namespace ImBlindedByTheLights.HarmonyPatches {
 				? preset
 				: EnvironmentEffectsFilterPreset.AllEffects;
 
-			if (Config.Instance.enablePlugin && Config.Instance.staticInHeadset && Config.Instance.staticOnDesktop) {
+			if (forceStatic) {
 				DefaultPresetField?.SetValue(playerSpecificSettings, EnvironmentEffectsFilterPreset.NoEffects);
 				ExpertPlusPresetField?.SetValue(playerSpecificSettings, EnvironmentEffectsFilterPreset.NoEffects);
 				environmentEffectsFilterPreset = EnvironmentEffectsFilterPreset.NoEffects;
 			}
 
-			enabled = environmentEffectsFilterPreset == EnvironmentEffectsFilterPreset.NoEffects;
+			return environmentEffectsFilterPreset == EnvironmentEffectsFilterPreset.NoEffects;
 		}
 	}
 }
